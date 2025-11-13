@@ -1,0 +1,175 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Student Result Calling System</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #333;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .upload-section {
+            border: 2px dashed #ddd;
+            padding: 40px;
+            text-align: center;
+            border-radius: 10px;
+            margin-bottom: 20px;
+        }
+        .upload-section:hover {
+            border-color: #007bff;
+            background-color: #f8f9fa;
+        }
+        input[type="file"] {
+            margin: 20px 0;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            width: 100%;
+        }
+        button {
+            background-color: #007bff;
+            color: white;
+            padding: 12px 30px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            width: 100%;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+        .instructions {
+            background-color: #e9ecef;
+            padding: 20px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+        }
+        .instructions h3 {
+            margin-top: 0;
+            color: #495057;
+        }
+        .instructions ul {
+            margin-bottom: 0;
+        }
+        .test-section {
+            margin-top: 30px;
+            padding-top: 20px;
+            border-top: 1px solid #ddd;
+        }
+        .test-inputs {
+            display: flex;
+            gap: 10px;
+            margin: 10px 0;
+        }
+        .test-inputs input {
+            flex: 1;
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+        #testCallBtn {
+            background-color: #28a745;
+            width: auto;
+            padding: 8px 20px;
+        }
+        #testCallBtn:hover {
+            background-color: #218838;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🎓 EduCaller</h1>
+        
+        <div class="instructions">
+            <h3>📋 Instructions:</h3>
+            <ul>
+                <li>Upload a CSV file with columns: Name, Semester, SPI, Result, Father Name, Father Contact</li>
+                <li>The system will generate audio messages and automatically call parents</li>
+                <li>Make sure phone numbers are in correct format (without +91 prefix)</li>
+                <li>Test with a single call first before processing the entire CSV</li>
+            </ul>
+        </div>
+
+        <div class="upload-section">
+            <h3>📁 Upload Student Data CSV</h3>
+            <form method="POST" enctype="multipart/form-data">
+                <input type="file" name="csv" accept=".csv" required>
+                <button type="submit">🚀 Generate Audio & Make Calls</button>
+            </form>
+        </div>
+
+        <div class="test-section">
+            <h3>🧪 Test Single Call</h3>
+            <p>Test the calling functionality before processing the entire CSV:</p>
+            <div class="test-inputs">
+                <input type="text" id="testPhone" placeholder="Phone Number (e.g., 9876543210)" />
+                <input type="text" id="testMessage" placeholder="Test message" value="Hello, this is a test call from the college." />
+                <button id="testCallBtn" onclick="makeTestCall()">📞 Make Test Call</button>
+            </div>
+            <div id="testResult" style="margin-top: 10px;"></div>
+        </div>
+    </div>
+
+    <script>
+        async function makeTestCall() {
+            const phone = document.getElementById('testPhone').value;
+            const message = document.getElementById('testMessage').value;
+            const resultDiv = document.getElementById('testResult');
+            
+            if (!phone || !message) {
+                alert('Please enter both phone number and message');
+                return;
+            }
+
+            // Add +91 if not present
+            let formattedPhone = phone.trim();
+            if (!formattedPhone.startsWith('+')) {
+                formattedPhone = '+91' + formattedPhone;
+            }
+
+            resultDiv.innerHTML = '<p style="color: orange;">⏳ Making test call...</p>';
+
+            try {
+                const response = await fetch('/make_single_call', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        phone: formattedPhone,
+                        message: message
+                    })
+                });
+
+                const result = await response.json();
+                
+                if (result.success) {
+                    resultDiv.innerHTML = `<p style="color: green;">✅ Test call initiated successfully! Call SID: ${result.call_sid}</p>`;
+                } else {
+                    resultDiv.innerHTML = `<p style="color: red;">❌ Test call failed: ${result.error}</p>`;
+                }
+            } catch (error) {
+                resultDiv.innerHTML = `<p style="color: red;">❌ Error: ${error.message}</p>`;
+            }
+        }
+    </script>
+</body>
+</html>
